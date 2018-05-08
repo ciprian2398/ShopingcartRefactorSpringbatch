@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+    "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+    
+        <property name="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</property>
+        <property name="hibernate.connection.driver.class">oracle.jdbc.driver.OracleDriver</property>
+        <property name="hibernate.connection.url">jdbc:oracle:thin:@localhost:1521:XE</property>
+        <property name="hibernate.connection.username">DU</property>
+        <property name="hibernate.connection.password">wasd1234</property>
+		
+        <!-- General Hibernate settings. -->
+        <property name="show_sql">false</property>
+        <property name="format_sql">true</property>
+		
+        <!-- Mappings -->
+    	<mapping class="shopping_cart.product.Product"/>
+    </session-factory>
+</hibernate-configuration>

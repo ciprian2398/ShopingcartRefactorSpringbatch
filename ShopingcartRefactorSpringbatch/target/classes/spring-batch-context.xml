@@ -1,0 +1,71 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:batch="http://www.springframework.org/schema/batch" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/batch
+		http://www.springframework.org/schema/batch/spring-batch-3.0.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+
+    <import resource="classpath:context-model.xml"/>
+
+
+	<bean id="jobRepository" class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean" />
+
+	<bean id="jobLauncher" 	class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+		<property name="jobRepository" ref="jobRepository" />
+	</bean>
+
+	<bean id="multiResourceItemReader" class="org.springframework.batch.item.file.MultiResourceItemReader">
+		<property name="resources" value="classpath:csv/data.csv" />
+		<property name="delegate" ref="flatFileItemReader" />
+  	</bean>
+
+	<bean id="flatFileItemReader" class="org.springframework.batch.item.file.FlatFileItemReader"  scope="step">
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+				<property name="fieldSetMapper">
+					<bean class="springbatchexporter.productexporter.ProductFieldSetMapper" />
+				</property>
+				<property name="lineTokenizer">
+					<bean class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="delimiter" value=";" />
+					</bean>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+  	<bean id="databaseItemWriter" class="org.springframework.batch.item.database.HibernateItemWriter">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<bean scope="prototype" id="validator" class="shopping_cart.product.validator.SipmleProductValidator" />
+
+	<bean id="itemProcessor" class="springbatchexporter.productexporter.ProductItemProcessor" >
+		<property name="productValidator" ref="validator" />
+	</bean>
+
+	<bean id="jobListener" class="springbatchexporter.productexporter.ProductJobListener" />
+
+	<bean id="fileMovieTasklet" class="springbatchexporter.productexporter.FileMoveTasklet" />
+
+
+	<batch:job id="productResultJob">
+
+		<batch:step id="step1" next="moveData">
+			<batch:tasklet transaction-manager="transactionManager">
+				<batch:chunk reader="multiResourceItemReader" writer="databaseItemWriter"
+					processor="itemProcessor" commit-interval="10" />
+			</batch:tasklet>
+		</batch:step>
+
+		<batch:step id="moveData">
+			<batch:tasklet ref="fileMovieTasklet" />
+		</batch:step>
+
+		<batch:listeners>
+			<batch:listener ref="jobListener" />
+		</batch:listeners>
+
+	</batch:job>
+
+</beans>			
